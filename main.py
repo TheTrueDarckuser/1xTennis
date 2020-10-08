@@ -8,25 +8,25 @@ import time
 import datetime
 import requests
 import winsound
+import os
 
-url = 'https://1xstavka.ru/ru'
-login = '52150449'
-password = 'hvxct9vf'
-amount = 20
-# url = 'https://bet-1x55190.com/ru'
-# login = '17130413'
-# password = 'Darckuser7799'
-# amount = 10
+
+url = 'https://one-xotsvo.world/ru'
+# url = 'https://bet1x95202.com/ru'
+login = '17130413'
+password = 'Darckuser7799'
+amount = 150
 autoLogin = True
-# ligs = ['boomcup', 'мастерс', 'pro spin series']
+delLigs = ['winners cup', 'mixed', 'wta', 'микст', 'сетка кап', 'пары', 'Smash Cup', 'Neva Open', 'VS Open', "Россия. Мастерс", "Россия. Мастерс. Про тур", "Russian River Cup", 'Mountain Bay Open', 'Чемпионат Восточной Европы']
 useAPI = True
-apiLiveIP = 'http://20.43.17.48/1x-api/live/Tennis/'
+apiLiveIP = 'http://b-api.org/1x-api/live/Tennis/'
 
-browser = webdriver.Firefox()
+browser = webdriver.Firefox(log_path='NUL')
+
 
 
 class OneXStavka(object):
-    def __init__(self, browser, url, login, password, amount, apiLiveIP, useAPI):
+    def __init__(self, browser, url, login, password, amount, apiLiveIP, useAPI, useAutoLogin):
         self.browser = browser
         self.login = login
         self.password = password
@@ -35,6 +35,7 @@ class OneXStavka(object):
         self.apiLiveIP = apiLiveIP
         self.sleep30min = False
         self.useAPI = useAPI
+        self.useAutoLogin = useAutoLogin
 
         self.individualTotalFirst = False
         self.individualTotalSecond = False
@@ -66,7 +67,6 @@ class OneXStavka(object):
         except FileExistsError:
             pass
 
-
     def readInfo(self, file):
         with open(file, 'r') as file:
             try:
@@ -81,6 +81,20 @@ class OneXStavka(object):
 
     def apiLive(self):
         return requests.get(self.apiLiveIP).json()
+
+    def clearRamBrowser(self, browser):
+        pid = browser.capabilities['moz:processID']
+        proc_list = os.popen('tasklist /FO CSV').read()
+        proc_list = proc_list.split('\n')[3:-1]
+        procPidRam = {}
+        for i in proc_list:
+            try:
+                procPidRam.update({int(i.replace('"', '').split(',')[1]): int(
+                    ''.join([a for a in i.replace('"', '').split(',')[-1][:-3] if a.isdigit()]))})
+            except:
+                pass
+        if procPidRam[pid] > 400000:
+            browser.quit()
 
     def getIndividualTotal(self, browser, favorite: str):
         # Проверка на сеты
@@ -106,6 +120,10 @@ class OneXStavka(object):
                     tries += 1
                     browser.refresh()
                     time.sleep(5)
+                    ActionChains(self.browser).move_to_element(
+                        self.browser.find_element_by_css_selector('#_logo')).perform()
+                    ActionChains(self.browser).move_by_offset(5, 5).perform()
+                    sleep(0.5)
                     if tries > 15:
                         return False
 
@@ -122,7 +140,10 @@ class OneXStavka(object):
                 return self.individualTotalSecond, self.individualTotalFirst
 
     def autoLogin(self):
+        self.setMinimizeMemory()
         self.browser.get(self.url)
+        ActionChains(browser).move_to_element(browser.find_element_by_css_selector('#_logo')).perform()
+        sleep(0.5)
         browser.find_element_by_css_selector('.loginDropTop_con').click()
         sleep(1)
         browser.find_element_by_css_selector('#auth_id_email').send_keys(self.login)
@@ -141,10 +162,6 @@ class OneXStavka(object):
 
     def turnOnBetInOneClick(self):
 
-        if self.browser.current_url != self.url + '/live/Table-Tennis/':
-            self.browser.get(self.url + '/live/Table-Tennis/')
-            sleep(5)
-
         # betOnOneClick = self.browser.find_element_by_class_name('flex-grid')
         self.browser.find_element_by_css_selector('.c-spinner__input--small').send_keys(Keys.CONTROL + 'A')
         self.browser.find_element_by_css_selector('.c-spinner__input--small').send_keys(Keys.DELETE)
@@ -160,6 +177,11 @@ class OneXStavka(object):
         self.browser.find_element_by_xpath("//button[contains(.,'ОК')]").click()
         sleep(1)
 
+    def setMinimizeMemory(self):
+        browser.get('about:memory')
+        sleep(1)
+        browser.find_element_by_css_selector('div.opsRow:nth-child(3) > button:nth-child(4)').click()
+        sleep(1)
 
     def checkHistory(self, nameNewBet):
         print('name')
@@ -211,7 +233,6 @@ class OneXStavka(object):
         else:
             return False
 
-
     def historyBuffSync(self):
         p = 0
         while 1:
@@ -237,11 +258,12 @@ class OneXStavka(object):
             [new.update({i: buff[i]}) for i in buff.keys() if buff[i]['name'] in names]
             self.writeInfo(new, 'buff.json')
 
-
-
     def algoritm(self):
         self.browser.get(self.url + '/live/Tennis/')
         sleep(5)
+        ActionChains(self.browser).move_to_element(self.browser.find_element_by_css_selector('#_logo')).perform()
+        ActionChains(self.browser).move_by_offset(5, 5).perform()
+        sleep(0.5)
 
         countForReloadPage = 0
         while 1:
@@ -250,6 +272,10 @@ class OneXStavka(object):
                 countForReloadPage = 0
                 browser.refresh()
                 time.sleep(5)
+                ActionChains(self.browser).move_to_element(
+                    self.browser.find_element_by_css_selector('#_logo')).perform()
+                ActionChains(self.browser).move_by_offset(5, 5).perform()
+                sleep(0.5)
 
             try:
                 games = browser.find_element_by_id('games_content').find_element_by_xpath('div/div/div[1]')
@@ -264,13 +290,13 @@ class OneXStavka(object):
                     liga = game[0].text.split('\n')[0]
 
                     #Отсев лишних лиг
-                    if liga.lower().find('женщины') != -1:
-                        continue
-
-                    # if liga.lower().find('пары') != -1:
+                    # if liga.lower().find('женщины') != -1:
                     #     continue
 
-                    # if len([i for i in ligs if liga.lower().strip().find(i)]) > 0:
+
+
+                    if True in [True for delLig in delLigs if liga.lower().strip().find(delLig) != -1]:
+                        continue
 
                     oldURLS = self.readInfo('buff.json')
                     oldURLS = list(oldURLS.values())
@@ -282,12 +308,19 @@ class OneXStavka(object):
                             name = match.find_element_by_class_name('c-events__name').text
                             while name.find('(') != -1:
                                 name = name[:name.find('(')] + name[name.find(')') + 1:]
+                            # print(name)
+                            name = name.split('\n')
+                            name = [i.strip() for i in name]
+                            name = '\n'.join(name)
 
                             url = match.find_element_by_class_name('c-events__name').get_attribute('href')
                             if url in oldURLS:
                                 continue
 
-                            total = match.find_elements_by_class_name('c-bets__bet')[4].text
+                            try:
+                                total = match.find_elements_by_class_name('c-bets__bet')[4].text
+                            except IndexError:
+                                continue
                             if total == '-':
                                 continue
 
@@ -321,35 +354,47 @@ class OneXStavka(object):
                             favorite = oldSecondKoef
                             outsider = oldFirstKoef
 
+                        print(liga)
+                        print(name)
+                        print(total)
+                        print('Фаворит коэф', favorite)
+                        print('Разница тоталов', (float(total) - float(oldTotal)))
+                        print(url)
+                        print('\n\n')
 
-                        if float(favorite) <= 1.55:
+                        if float(favorite) <= 1.6:
 
-                            if (float(total) - float(oldTotal)) >= 8:
-                                # После добавления в буффер нужно пропускать проверку individualTotal
+                            if float(total) >= 24.5:
 
-
-                                print(liga)
-                                print(name)
-                                print(total)
-                                print(url)
-                                print('\n\n')
+                                if (float(total) - float(oldTotal)) >= 8:
+                                    # После добавления в буффер нужно пропускать проверку individualTotal
 
 
-                                self.placeBet(url, match.find_elements_by_class_name('c-bets__bet')[5], name)
-                                    # Тут мы нашли подходящий матч
-                                    # Ставим на больший из коэффициентов ИНДИВИДУАЛЬНЫЙ ТОТАЛ меньше
+                                    print(liga)
+                                    print(name)
+                                    print(total)
+                                    print(url)
+                                    print('\n\n')
 
-                                try:
-                                    browser.find_element_by_css_selector(".c-btn--size-m").click()
-                                except:
-                                    pass
-                                while len(browser.window_handles) != 1:
-                                    browser.close()
-                                    browser.switch_to.window(browser.window_handles[-1])
-                                try:
-                                    browser.find_element_by_css_selector(".c-btn--size-m").click()
-                                except:
-                                    pass
+
+                                    self.placeBet(url, match.find_elements_by_class_name('c-bets__bet')[5], name)
+                                        # Тут мы нашли подходящий матч
+                                        # Ставим на больший из коэффициентов ИНДИВИДУАЛЬНЫЙ ТОТАЛ меньше
+
+                                    try:
+                                        browser.find_element_by_css_selector(".c-btn--size-m").click()
+                                    except:
+                                        pass
+                                    while len(browser.window_handles) != 1:
+                                        browser.close()
+                                        browser.switch_to.window(browser.window_handles[-1])
+                                    try:
+                                        browser.find_element_by_css_selector(".c-btn--size-m").click()
+                                    except:
+                                        pass
+
+                if self.useAutoLogin:
+                    self.clearRamBrowser(browser)
 
 
             except (exceptions.ProtocolError, common.exceptions.NoSuchElementException, common.exceptions.StaleElementReferenceException):
@@ -358,8 +403,10 @@ class OneXStavka(object):
                     browser.switch_to.window(browser.window_handles[-1])
                 browser.refresh()
                 time.sleep(5)
-
-
+                ActionChains(self.browser).move_to_element(
+                    self.browser.find_element_by_css_selector('#_logo')).perform()
+                ActionChains(self.browser).move_by_offset(5, 5).perform()
+                sleep(0.5)
 
     def buffAnalys(self, url, name):
         data = self.readInfo('buff.json')
@@ -515,28 +562,32 @@ class OneXStavka(object):
                 tries += 1
                 browser.refresh()
                 time.sleep(5)
+                ActionChains(self.browser).move_to_element(
+                    self.browser.find_element_by_css_selector('#_logo')).perform()
+                ActionChains(self.browser).move_by_offset(5, 5).perform()
+                sleep(0.5)
                 if tries > 10:
                     print('BAD')
                     1/0
 
 
-controlPanel = OneXStavka(browser, url, login, password, amount, apiLiveIP, useAPI)
+controlPanel = OneXStavka(browser, url, login, password, amount, apiLiveIP, useAPI, autoLogin)
 
 while 1:
-    # try:
-    if autoLogin:
-        controlPanel.autoLogin()
-    else:
-        controlPanel.manualLogin()
-    controlPanel.turnOnBetInOneClick()
-    controlPanel.algoritm()
-    # except:
-    #     print('Полный перезапуск автоставки')
-    #     try:
-    #         browser.quit()
-    #         browser.quit()
-    #     except:
-    #         pass
-    #     browser = webdriver.Firefox()
-    #     print('Запуск браузера')
-    #     controlPanel = OneXStavka(browser, url, login, password, amount, apiLiveIP, useAPI)
+    try:
+        if autoLogin:
+            controlPanel.autoLogin()
+        else:
+            controlPanel.manualLogin()
+        controlPanel.turnOnBetInOneClick()
+        controlPanel.algoritm()
+    except:
+         print('Полный перезапуск автоставки')
+         try:
+             browser.quit()
+             browser.quit()
+         except:
+             pass
+         browser = webdriver.Firefox(log_path='NUL')
+         print('Запуск браузера')
+         controlPanel = OneXStavka(browser, url, login, password, amount, apiLiveIP, useAPI, autoLogin)
