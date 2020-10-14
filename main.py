@@ -13,11 +13,11 @@ import os
 
 url = 'https://one-xotsvo.world/ru'
 # url = 'https://bet1x95202.com/ru'
-login = '17130413'
-password = 'Darckuser7799'
-amount = 150
+login = ''
+password = ''
+amount = 375
 autoLogin = True
-delLigs = ['winners cup', 'mixed', 'wta', 'микст', 'сетка кап', 'пары', 'Smash Cup', 'Neva Open', 'VS Open', "Россия. Мастерс", "Россия. Мастерс. Про тур", "Russian River Cup", 'Mountain Bay Open', 'Чемпионат Восточной Европы']
+delLigs = ['winners cup', 'mixed', 'микст', 'сетка кап', 'пары', 'Smash Cup', 'Neva Open', 'VS Open', "Россия. Мастерс", "Россия. Мастерс. Про тур", "Russian River Cup", 'Mountain Bay Open', 'Чемпионат Восточной Европы', 'daily aqua tour', 'daily premier tour', 'daily pro tour']
 useAPI = True
 apiLiveIP = 'http://b-api.org/1x-api/live/Tennis/'
 

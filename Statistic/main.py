@@ -11,9 +11,11 @@ import winsound
 import openpyxl
 
 useAPI = False
-apiLiveIP = 'http://20.43.17.48/1x-api/live/Tennis/'
+apiLiveIP = 'http://b-api.com/1x-api/live/Tennis/'
+oneXbetUrl = 'https://1x-bet93029.com/ru/live/Tennis/'
 
 browser = webdriver.Firefox()
+browser.set_window_size(2500, 2000)
 
 
 class OneXStavka(object):
@@ -24,6 +26,12 @@ class OneXStavka(object):
 
         try:
             file = open("buff.json", 'x')
+            file.close()
+        except FileExistsError:
+            pass
+
+        try:
+            file = open("statistic.json", 'x')
             file.close()
         except FileExistsError:
             pass
@@ -80,8 +88,7 @@ class OneXStavka(object):
         return requests.get(self.apiLiveIP).json()
 
     def algoritm(self):
-        browser.set_window_size(3000, 1000)
-        self.browser.get('https://1xstavka.ru/live/Tennis/')
+        self.browser.get(oneXbetUrl)
         sleep(5)
 
         countForReloadPage = 0
@@ -114,28 +121,13 @@ class OneXStavka(object):
                             name = match.find_element_by_class_name('c-events__name').text
                             while name.find('(') != -1:
                                 name = name[:name.find('(')] + name[name.find(')') + 1:]
-
-                            url = match.find_element_by_class_name('c-events__name').get_attribute('href')
-                            if url in oldURLS:
-                                continue
+                            name = name.split('\n')
+                            name = [i.strip() for i in name]
+                            name = '\n'.join(name)
 
                             total = match.find_elements_by_class_name('c-bets__bet')[4].text
                             if total == '-':
                                 continue
-                            totalMore = match.find_elements_by_class_name('c-bets__bet')[3].text
-                            totalLess = match.find_elements_by_class_name('c-bets__bet')[5].text
-
-                            idTotalFirstMore = match.find_elements_by_class_name('c-bets__bet')[9].text
-                            idTotalFirst = match.find_elements_by_class_name('c-bets__bet')[10].text
-                            idTotalFirstLess = match.find_elements_by_class_name('c-bets__bet')[11].text
-
-                            idTotalSecondMore = match.find_elements_by_class_name('c-bets__bet')[12].text
-                            idTotalSecond = match.find_elements_by_class_name('c-bets__bet')[13].text
-                            idTotalSecondLess = match.find_elements_by_class_name('c-bets__bet')[14].text
-
-                            oddsFirst = match.find_elements_by_class_name('c-bets__bet')[12].text
-                            odds = match.find_elements_by_class_name('c-bets__bet')[13].text
-                            oddsSecond = match.find_elements_by_class_name('c-bets__bet')[14].text
 
                             firstKoef = match.find_elements_by_class_name('c-bets__bet')[0].text
                             if firstKoef == '-':
@@ -143,6 +135,19 @@ class OneXStavka(object):
                             secondKoef = match.find_elements_by_class_name('c-bets__bet')[2].text
                             if secondKoef == '-':
                                 continue
+
+                            totalL = match.find_elements_by_class_name('c-bets__bet')[5].text
+                            totalM = match.find_elements_by_class_name('c-bets__bet')[3].text
+                            idT1L = match.find_elements_by_class_name('c-bets__bet')[11].text
+                            idT1 = match.find_elements_by_class_name('c-bets__bet')[10].text
+                            idT1M = match.find_elements_by_class_name('c-bets__bet')[9].text
+                            idT2L = match.find_elements_by_class_name('c-bets__bet')[14].text
+                            idT2 = match.find_elements_by_class_name('c-bets__bet')[13].text
+                            idT2M = match.find_elements_by_class_name('c-bets__bet')[12].text
+                            odds1 = match.find_elements_by_class_name('c-bets__bet')[6].text
+                            odds = match.find_elements_by_class_name('c-bets__bet')[7].text
+                            odds2 = match.find_elements_by_class_name('c-bets__bet')[8].text
+                            url = match.find_element_by_class_name('c-events__name').get_attribute('href')
 
                             score = match.find_elements_by_class_name('c-events-scoreboard__cell--all')
                             score = [i.text for i in score]
@@ -188,20 +193,13 @@ class OneXStavka(object):
                         print(url)
                         print('\n\n')
 
-                        if (float(total) - float(oldTotal)) == 7:
-                            self.addInfo(1, infOld, liga, name, score, firstKoef, secondKoef, favoriteNumber, totalMore, total, totalLess, idTotalFirstMore, idTotalFirst, idTotalFirstLess, idTotalSecondMore, idTotalSecond, idTotalSecondLess, oddsFirst, odds, oddsSecond, url)
-
-                        elif (float(total) - float(oldTotal)) == 7.5:
-                            self.addInfo(2, infOld, liga, name, score, firstKoef, secondKoef, favoriteNumber, totalMore, total, totalLess, idTotalFirstMore, idTotalFirst, idTotalFirstLess, idTotalSecondMore, idTotalSecond, idTotalSecondLess, oddsFirst, odds, oddsSecond, url)
-
-                        elif (float(total) - float(oldTotal)) == 8:
-                            self.addInfo(3, infOld, liga, name, score, firstKoef, secondKoef, favoriteNumber, totalMore, total, totalLess, idTotalFirstMore, idTotalFirst, idTotalFirstLess, idTotalSecondMore, idTotalSecond, idTotalSecondLess, oddsFirst, odds, oddsSecond, url)
-
-                        elif (float(total) - float(oldTotal)) == 8.5:
-                            self.addInfo(4, infOld, liga, name, score, firstKoef, secondKoef, favoriteNumber, totalMore, total, totalLess, idTotalFirstMore, idTotalFirst, idTotalFirstLess, idTotalSecondMore, idTotalSecond, idTotalSecondLess, oddsFirst, odds, oddsSecond, url)
-
-                        elif (float(total) - float(oldTotal)) >= 9:
-                            self.addInfo(5, infOld, liga, name, score, firstKoef, secondKoef, favoriteNumber, totalMore, total, totalLess, idTotalFirstMore, idTotalFirst, idTotalFirstLess, idTotalSecondMore, idTotalSecond, idTotalSecondLess, oddsFirst, odds, oddsSecond, url)
+                        if (float(total) - float(oldTotal)) >= 7:
+                            self.addInfoJson(liga, name, [oldFirstKoef,firstKoef], [oldSecondKoef, secondKoef],
+                                             [infOld[liga][name]['totalL'], float(totalL)], [infOld[liga][name]['total'], float(total)], [infOld[liga][name]['totalM'], float(totalM)],
+                                             [infOld[liga][name]['idT1L'], float(idT1L)], [infOld[liga][name]['idT1'], float(idT1)], [infOld[liga][name]['idT1M'], float(idT1M)],
+                                             [infOld[liga][name]['idT2L'], float(idT2L)], [infOld[liga][name]['idT2'], float(idT2)], [infOld[liga][name]['idT2M'], float(idT2M)],
+                                             [infOld[liga][name]['odds1'], odds1], [infOld[liga][name]['odds'], odds], [infOld[liga][name]['odds2'], odds2],
+                                             url, score, infOld[liga][name]['timeStart'])
 
                             # print(liga)
                             # print(name)
@@ -215,6 +213,36 @@ class OneXStavka(object):
                 print('213 exceptions.ProtocolError, common.exceptions.NoSuchElementException,common.exceptions.StaleElementReferenceException')
                 browser.refresh()
                 time.sleep(5)
+
+
+    def addInfoJson(self,liga, name, win1, win2, totalL, total, totalM, idT1L, idT1, idT1M, idT2L, idT2, idT2M, odds1, odds, odds2, url, score, timeStart):
+        women = False
+        pairs = False
+        mixed = False
+        if liga.lower().find('женщины') != -1:
+            women = True
+        if liga.lower().find('пары') != -1:
+            pairs = True
+        if liga.lower().find('mixed') != -1:
+            mixed = True
+        name1, name2 = name.split('\n')
+        # Тут анализируем полученную информацию, разбиваем имена, регистрируем время, приводим к нужным типам переменных
+        # Решть как передавать значения разницы тоталов: в главном ключе и значение передавать потом, либо передавать в контексте
+        # Возможна ошибка если ключа нет с разницей тоталов, то нужно создавать
+        #Доделать словарь
+        Dict = self.readInfo('statistic.json')
+        if len(Dict[float(float(total[0]) - float(total[1]))][url]) == 0:
+            Dict.update({ float(float(total[0]) - float(total[1])) : {url: {'liga' : liga, 'name1': name1.strip(),
+                                                                                     'name2': name2.strip(), 'women':women,
+                                                                                     'pairs':pairs, 'mixed':mixed,
+                                                                                     'win1':win1,'win2':win2,
+                                                                                     'totalL':totalL, 'total':total, 'totalM':totalM,
+                                                                                     'idT1L':idT1L, 'idT1':idT1, 'idT1M':idT1M,
+                                                                                     'idT2L':idT2L, 'idT2':idT2, 'idT1M':idT2M,
+                                                                                     'odds1':odds1, 'odds':odds, 'odds2':odds2,
+                                                                                     'url':url, 'endTotal':None, 'endScore':None, 'result':None, 'score':score, 'timeStart':timeStart, }}})
+        self.writeInfo(Dict, 'statistic.json')
+
 
     def addInfo(self, workSheetNum, infOld, liga, name, score, firstKoef, secondKoef, favorite, totalMore, total, totalLess, idTotalFirstMore, idTotalFirst, idTotalFirstLess, idTotalSecondMore, idTotalSecond, idTotalSecondLess, oddsFirst, odds, oddsSecond, url):
 
